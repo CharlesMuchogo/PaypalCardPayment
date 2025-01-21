@@ -62,7 +62,6 @@ dependencies {
 
     //paypal card
     implementation(libs.card.payments)
-    implementation(libs.payment.buttons)
 
     // Koin
     api(libs.koin.core)

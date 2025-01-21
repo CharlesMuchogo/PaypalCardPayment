@@ -8,11 +8,10 @@ import com.muchogoc.cardpayments.data.network.ApiHelper
 import com.muchogoc.cardpayments.data.network.Http
 import com.muchogoc.cardpayments.domain.dto.ErrorDTO
 import com.muchogoc.cardpayments.domain.dto.GetAccessTokenResponseDTO
-import com.muchogoc.cardpayments.domain.dto.OrderIdRequest
 import com.muchogoc.cardpayments.domain.dto.GetOrderIdResponseDTO
+import com.muchogoc.cardpayments.domain.dto.OrderIdRequest
 import com.muchogoc.cardpayments.utils.Utils.decodeExceptionMessage
 import io.ktor.client.call.body
-import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody

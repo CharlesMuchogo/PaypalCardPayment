@@ -23,18 +23,11 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-
-        <activity
-            android:name=".MyCardPaymentActivity"
-            android:launchMode="singleTop"
-            android:exported="true"
-            >
             <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <data android:scheme="myapp" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
+                <action android:name="android.intent.action.VIEW"/>
+                <data android:scheme="com.muchogoc.cardpayments"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
             </intent-filter>
         </activity>
 

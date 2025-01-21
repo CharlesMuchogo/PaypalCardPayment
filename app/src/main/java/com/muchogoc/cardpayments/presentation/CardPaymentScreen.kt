@@ -1,5 +1,8 @@
 package com.muchogoc.cardpayments.presentation
 
+import android.content.Context
+import android.content.ContextWrapper
+import androidx.activity.ComponentActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -25,17 +28,17 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AddCircle
-import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,6 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontFamily
@@ -54,6 +58,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.muchogoc.blogapp.presentation.utils.ResultStatus
 import com.muchogoc.cardpayments.R
 import com.muchogoc.cardpayments.presentation.actions.PaymentCardDetailEntryAction
 import com.muchogoc.cardpayments.presentation.common.AppButton
@@ -63,13 +68,17 @@ import com.muchogoc.cardpayments.presentation.viewmodel.CardPaymentViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun CardPaymentOptionBottomSheet(
+fun CardPaymentScreen(
     modifier: Modifier = Modifier
 ){
     val cardPaymentViewModel = koinViewModel<CardPaymentViewModel>()
     val showCVVDetails = cardPaymentViewModel.showCVVDetails
     val cardDetailsState = cardPaymentViewModel.cardDetailsState
     val cardTypeIcon = cardPaymentViewModel.cardTypeIcon
+
+    val cardPaymentState by cardPaymentViewModel.cardPaymentState.collectAsState()
+
+    val context = LocalContext.current
 
     var isFormating by remember { mutableStateOf(false) }
 
@@ -348,18 +357,45 @@ fun CardPaymentOptionBottomSheet(
 
         AppButton(
             onClick = {
-                cardPaymentViewModel.onCardPaymentDetailEntryAction(
-                    action = PaymentCardDetailEntryAction.OnSubmit
-                )
+                context.getActivityOrNull()?.let { cardPaymentViewModel.initiatePayment(it)}
+
             },
             content = {
-                Text(
-                    "Proceed to Pay",
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    fontWeight = FontWeight.Bold
-                )
+                when(cardPaymentState.status == ResultStatus.LOADING){
+                    true -> {
+                        println("Loading")
+                        Row(
+                            modifier = modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(25.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text("Loading...", color = MaterialTheme.colorScheme.onPrimary)
+                        }
+                    }
+                    false -> {
+                        Text(
+                            "Proceed to Pay",
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+
             }
         )
     }
 
+}
+
+fun Context.getActivityOrNull(): ComponentActivity? = when (this) {
+    is ComponentActivity -> this
+    is ContextWrapper -> baseContext.getActivityOrNull()
+    else -> null
 }

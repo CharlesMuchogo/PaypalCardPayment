@@ -355,28 +355,28 @@ fun CardPaymentScreen(
             )
         }
 
+        cardPaymentState.message?.let {
+            Text(it, modifier = Modifier.padding(vertical = 8.dp), style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error))
+        }
+
+        cardPaymentState.data?.let {
+            Text(it, modifier = Modifier.padding(vertical = 8.dp), style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary))
+        }
+
         AppButton(
             onClick = {
-                context.getActivityOrNull()?.let { cardPaymentViewModel.initiatePayment(it)}
-
+                context.getActivityOrNull()?.let { cardPaymentViewModel.onCardPaymentDetailEntryAction(PaymentCardDetailEntryAction.OnSubmit(activity = it))}
             },
             content = {
                 when(cardPaymentState.status == ResultStatus.LOADING){
                     true -> {
                         println("Loading")
-                        Row(
-                            modifier = modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                        ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(25.dp),
-                                strokeWidth = 2.dp,
-                                color = MaterialTheme.colorScheme.onPrimary,
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Text("Loading...", color = MaterialTheme.colorScheme.onPrimary)
-                        }
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(25.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                        )
+
                     }
                     false -> {
                         Text(

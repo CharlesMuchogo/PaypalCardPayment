@@ -1,7 +1,9 @@
 package com.muchogoc.cardpayments.presentation.actions
 
+import androidx.activity.ComponentActivity
+
 sealed interface PaymentCardDetailEntryAction {
-    data object OnSubmit : PaymentCardDetailEntryAction
+    data class OnSubmit(val activity: ComponentActivity) : PaymentCardDetailEntryAction
 
     data class OnCardNumberChange(val cardNumber: String): PaymentCardDetailEntryAction
 

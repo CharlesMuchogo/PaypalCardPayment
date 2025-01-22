@@ -1,12 +1,12 @@
 package com.muchogoc.cardpayments.presentation.state
 
 data class PaymentCardDetailsState(
-    val cardNumber: String = "",
-    val validThru: String = "",
-    val cvv: String = "",
-    val cardholderName: String = "",
+    val cardNumber: String = "4111111111111111",
+    val validThru: String = "01/27",
+    val cvv: String = "123",
+    val cardholderName: String = "Charles Muchogo",
     val saveCardDetails: Boolean = false,
-    val cardType: String = "",
+    val cardType: String = "Visa",
 
     /** error **/
     val cardNumberError: String? = null,

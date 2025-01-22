@@ -31,7 +31,7 @@ import com.paypal.android.corepayments.Environment
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
-class CardPaymentViewModel(private val remoteRepository: RemoteRepository): ViewModel() {
+class CardPaymentViewModel(private val remoteRepository: RemoteRepository) : ViewModel() {
 
     private val getAccessTokenState = MutableStateFlow(Results.initial<GetAccessTokenResponseDTO>())
     private val getOrderIdState = MutableStateFlow(Results.initial<GetOrderIdResponseDTO>())
@@ -40,7 +40,7 @@ class CardPaymentViewModel(private val remoteRepository: RemoteRepository): View
 
     var showCVVDetails by mutableStateOf(false)
 
-    fun updateCVVVisibility(){
+    fun updateCVVVisibility() {
         showCVVDetails = !showCVVDetails
     }
 
@@ -48,8 +48,8 @@ class CardPaymentViewModel(private val remoteRepository: RemoteRepository): View
 
     var cardTypeIcon by mutableStateOf<Int?>(null)
 
-    fun onCardPaymentDetailEntryAction(action: PaymentCardDetailEntryAction){
-        when(action){
+    fun onCardPaymentDetailEntryAction(action: PaymentCardDetailEntryAction) {
+        when (action) {
             is PaymentCardDetailEntryAction.OnCVVChange -> {
 
                 if (action.cvv.length < 5) {
@@ -58,30 +58,42 @@ class CardPaymentViewModel(private val remoteRepository: RemoteRepository): View
                     )
                 }
             }
-            is PaymentCardDetailEntryAction.OnCardNumberChange -> {
-                val formatted = Utils.formatCardNumber(cardNumber = action.cardNumber.replace("\\s".toRegex(), ""))
 
-                val cardType = Utils.detectCardType(cardDetailsState.cardNumber.replace("\\s".toRegex(), ""))
+            is PaymentCardDetailEntryAction.OnCardNumberChange -> {
+                val formatted = Utils.formatCardNumber(
+                    cardNumber = action.cardNumber.replace(
+                        "\\s".toRegex(),
+                        ""
+                    )
+                )
+
+                val cardType =
+                    Utils.detectCardType(cardDetailsState.cardNumber.replace("\\s".toRegex(), ""))
 
                 cardDetailsState = cardDetailsState.copy(
                     cardNumber = formatted,
                     cardType = cardType
                 )
-                cardTypeIcon = when(cardType){
+                cardTypeIcon = when (cardType) {
                     "Visa" -> R.drawable.visa
                     "Mastercard" -> R.drawable.mastercard_symbol
-                    else -> {null}
+                    else -> {
+                        null
+                    }
                 }
             }
+
             is PaymentCardDetailEntryAction.OnCardholderNameChange -> {
                 cardDetailsState = cardDetailsState.copy(
                     cardholderName = action.cardholderName
                 )
             }
+
             is PaymentCardDetailEntryAction.OnValidThruChange -> {
                 if (action.validThru.length < 6) {
 
-                    val formatted = Utils.formatValidThru(validThru = action.validThru.replace("/", ""))
+                    val formatted =
+                        Utils.formatValidThru(validThru = action.validThru.replace("/", ""))
                     cardDetailsState = cardDetailsState.copy(
                         validThru = formatted
                     )
@@ -95,14 +107,25 @@ class CardPaymentViewModel(private val remoteRepository: RemoteRepository): View
             }
 
 
-            PaymentCardDetailEntryAction.OnSubmit -> {  }
+            is PaymentCardDetailEntryAction.OnSubmit -> {
+                val expirationMonth = cardDetailsState.validThru.substringBefore("/")
+                val expirationYear = "20" + cardDetailsState.validThru.substringAfter("/")
+                initiatePayment(
+                    activity = action.activity, card = Card(
+                        number = cardDetailsState.cardNumber,
+                        expirationMonth = expirationMonth,
+                        expirationYear = expirationYear,
+                        securityCode = cardDetailsState.cvv,
+                    )
+                )
+            }
         }
     }
 
 
     private val validateString = ValidateString()
 
-     fun initiatePayment(activity: ComponentActivity){
+    fun initiatePayment(activity: ComponentActivity, card: Card) {
 
         viewModelScope.launch {
             cardPaymentState.value = Results.loading()
@@ -110,16 +133,17 @@ class CardPaymentViewModel(private val remoteRepository: RemoteRepository): View
 
             val purchaseUnits = listOf(
                 PurchaseUnit(
-                amount = Amount(
-                    currency_code = "USD",
-                    value = "5.00"
+                    amount = Amount(
+                        currency_code = "USD",
+                        value = "5.00"
+                    )
                 )
             )
-            )
 
 
-            if (getAccessTokenState.value.data?.access_token == null){
-                cardPaymentState.value = Results.error(getAccessTokenState.value.message ?: "Failed to get Access token")
+            if (getAccessTokenState.value.data?.access_token == null) {
+                cardPaymentState.value =
+                    Results.error(getAccessTokenState.value.message ?: "Failed to get Access token")
                 return@launch
             }
 
@@ -128,10 +152,14 @@ class CardPaymentViewModel(private val remoteRepository: RemoteRepository): View
                 purchase_units = purchaseUnits
             )
 
-            getOrderIdState.value = remoteRepository.getOrderId(orderIdRequest, getAccessTokenState.value.data?.access_token!!)
+            getOrderIdState.value = remoteRepository.getOrderId(
+                orderIdRequest,
+                getAccessTokenState.value.data?.access_token!!
+            )
 
-            if(getOrderIdState.value.data?.id == null){
-                cardPaymentState.value = Results.error(getAccessTokenState.value.message ?: "Failed to get Access token")
+            if (getOrderIdState.value.data?.id == null) {
+                cardPaymentState.value =
+                    Results.error(getAccessTokenState.value.message ?: "Failed to get Access token")
                 return@launch
             }
 
@@ -139,20 +167,10 @@ class CardPaymentViewModel(private val remoteRepository: RemoteRepository): View
 
             println(getOrderIdState.value.data)
 
-
-            val card = Card(
-                number = "4111111111111111",
-                expirationMonth = "01",
-                expirationYear = "2027",
-                securityCode = "123",
-            )
-
-
-
             println("OrderId is $orderId")
             println("my card -> $card")
 
-            val cardRequest  = CardRequest(
+            val cardRequest = CardRequest(
                 orderId = orderId,
                 card = card,
                 returnUrl = "com.muchogoc.cardpayments://example.com/returnUrl",
@@ -161,20 +179,27 @@ class CardPaymentViewModel(private val remoteRepository: RemoteRepository): View
 
 
             val config = CoreConfig(CLIENT_ID, environment = Environment.SANDBOX)
-            val cardClient = CardClient(activity ,config)
+            val cardClient = CardClient(activity, config)
 
-            cardClient.approveOrder(cardRequest = cardRequest){ result ->
+            cardClient.approveOrder(cardRequest = cardRequest) { result ->
                 when (result) {
                     is CardApproveOrderResult.Success -> {
-                        cardPaymentState.value = Results.success("Transaction Successfully approved")
+                        cardPaymentState.value =
+                            Results.success("Transaction Successfully approved")
                     }
 
                     is CardApproveOrderResult.AuthorizationRequired -> {
-                        presentAuthChallenge(activity, authChallenge = result.authChallenge, cardClient = cardClient)
+                        presentAuthChallenge(
+                            activity,
+                            authChallenge = result.authChallenge,
+                            cardClient = cardClient
+                        )
                     }
 
                     is CardApproveOrderResult.Failure -> {
-                        cardPaymentState.value = Results.error(result.error.message ?: "Something went wrong approving order")
+                        cardPaymentState.value = Results.error(
+                            result.error.message ?: "Something went wrong approving order"
+                        )
                     }
                 }
             }
